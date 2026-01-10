@@ -1,0 +1,1550 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Purchase App</title>
+
+<!-- Mobile First -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Purchase App">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="manifest" href="manifest.json">
+
+<!-- App Icons -->
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+/* ===============================
+   PERFORMANCE-FIRST DESIGN SYSTEM
+   =============================== */
+
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:rgba(15,23,42,.08);
+
+  --blue:#2563eb;
+  --blue-soft:#dbeafe;
+
+  --text:#0f172a;
+  --muted:#64748b;
+
+  --shadow-sm:0 4px 12px rgba(15,23,42,.06);
+  --shadow-md:0 12px 28px rgba(15,23,42,.10);
+}
+
+/* ===============================
+   RESET (LIGHTWEIGHT)
+   =============================== */
+
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui,-apple-system;
+}
+
+html,body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===============================
+   PAGE SYSTEM
+   =============================== */
+
+.page{
+  display:none;
+  min-height:100svh;
+  padding:22px 18px 160px;
+}
+
+.page.active{
+  display:block;
+  animation:pageIn .25s ease-out;
+}
+
+@keyframes pageIn{
+  from{opacity:0; transform:translateY(10px)}
+  to{opacity:1; transform:none}
+}
+
+/* ===============================
+   HEADERS
+   =============================== */
+
+h2{
+  margin:6px 0 18px;
+  font-size:20px;
+  font-weight:600;
+  letter-spacing:.2px;
+}
+
+/* ===============================
+   FORM
+   =============================== */
+
+form{
+  background:var(--card);
+  border-radius:22px;
+  padding:22px;
+  box-shadow:var(--shadow-md);
+}
+
+input{
+  width:100%;
+  padding:15px 16px;
+  margin-bottom:14px;
+
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:#f9fafb;
+
+  font-size:14px;
+  outline:none;
+
+  transition:transform .15s ease, border-color .15s ease;
+}
+
+input:focus{
+  border-color:var(--blue);
+  background:white;
+  transform:translateY(-1px);
+}
+
+/* ===============================
+   PRIMARY BUTTON
+   =============================== */
+
+form button{
+  width:100%;
+  padding:16px;
+  border-radius:999px;
+  border:none;
+
+  font-size:15px;
+  font-weight:600;
+  color:white;
+
+  background:linear-gradient(180deg,#3b82f6,#2563eb);
+  box-shadow:0 8px 22px rgba(37,99,235,.35);
+
+  transition:transform .12s ease;
+}
+
+form button:active{
+  transform:scale(.96);
+}
+
+/* ===============================
+   CARDS
+   =============================== */
+
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:16px 18px;
+  margin:14px 0;
+
+  font-size:14px;
+  line-height:1.6;
+
+  box-shadow:var(--shadow-sm);
+
+  transition:transform .15s ease;
+}
+
+.card:hover{
+  transform:translateY(-3px);
+}
+
+.card:active{
+  transform:scale(.97);
+}
+
+.card b{
+  color:var(--blue);
+}
+
+/* ===============================
+   TOP NAV BUTTONS
+   =============================== */
+
+.top-nav-btn{
+  width:46px;
+  height:46px;
+  border-radius:22px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:linear-gradient(180deg,#ffffff,#f1f5f9);
+  border:1px solid var(--border);
+
+  box-shadow:var(--shadow-sm);
+  transition:transform .12s ease;
+}
+
+.top-nav-btn:active{
+  transform:scale(.92);
+}
+
+.top-nav-btn svg{
+  width:22px;
+  height:22px;
+  stroke:#0f172a;
+  stroke-width:2.2;
+}
+
+/* ===============================
+   SAVE POPUP
+   =============================== */
+
+#savePopup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease;
+  z-index:999;
+}
+
+#savePopup.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.popup-card{
+  background:white;
+  border-radius:24px;
+  padding:26px;
+  width:85%;
+  max-width:320px;
+  text-align:center;
+
+  box-shadow:var(--shadow-md);
+  animation:pop .2s ease-out;
+}
+
+@keyframes pop{
+  from{transform:scale(.92); opacity:0}
+  to{transform:scale(1); opacity:1}
+}
+
+.popup-card .check{
+  width:54px;
+  height:54px;
+  margin:0 auto 12px;
+  border-radius:50%;
+
+  background:linear-gradient(180deg,#3b82f6,#2563eb);
+  color:white;
+  font-size:26px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* ===============================
+   BOTTOM NAV BAR
+   =============================== */
+
+nav{
+  position:fixed;
+  left:16px;
+  right:16px;
+  bottom:16px;
+
+  background:linear-gradient(180deg,#ffffff,#f1f5f9);
+  border-radius:26px;
+
+  display:flex;
+  gap:6px;
+  padding:6px;
+
+  box-shadow:0 14px 30px rgba(15,23,42,.18);
+}
+
+nav button{
+  all:unset;
+  flex:1;
+
+  height:46px;
+  border-radius:22px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  cursor:pointer;
+  transition:transform .12s ease;
+}
+
+nav button svg{
+  width:22px;
+  height:22px;
+  stroke:#64748b;
+}
+
+nav button:active{
+  transform:scale(.92);
+}
+
+nav button:active svg{
+  stroke:var(--blue);
+}
+
+/* ===============================
+   LEDGER TITLE
+   =============================== */
+
+#ledgerTitle{
+  font-size:22px;
+  font-weight:600;
+  margin-bottom:14px;
+}
+/* ===============================
+   SORT BUTTON (PREMIUM)
+   =============================== */
+
+.sort-btn{
+  width:38px;
+  height:38px;
+  border-radius:22px;
+
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border:1px solid rgba(15,23,42,.08);
+  background:linear-gradient(180deg,#ffffff,#f1f5f9);
+
+  box-shadow:0 6px 16px rgba(15,23,42,.08);
+
+  cursor:pointer;
+  transition:all .18s ease;
+}
+
+.sort-btn svg{
+  width:18px;
+  height:18px;
+  stroke:#475569;
+  stroke-width:2.2; 
+}
+
+.sort-btn:active{
+  transform:scale(.92);
+}
+
+.sort-btn.active{
+  background:linear-gradient(180deg,#3b82f6,#2563eb);
+  box-shadow:0 8px 20px rgba(37,99,235,.35);
+}
+
+.sort-btn.active svg{
+  stroke:white;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- SAVE POPUP -->
+<div id="savePopup">
+  <div class="popup-card">
+    <div class="check">✓</div>
+    <h3>Saved Successfully</h3>
+    <p>Your purchase entry has been saved.</p>
+  </div>
+</div>
+
+<!-- PAGE 1 -->
+<div id="home" class="page active">
+<h2>Purchases</h2>
+
+
+<div style="margin-bottom:16px;">
+  <button
+    id="resetEditBtn"
+    class="top-nav-btn"
+    style="display:none"
+    onclick="resetEditMode()"
+    title="Back to Add Entry"
+  >
+    <i data-lucide="rotate-ccw"></i>
+  </button>
+</div>
+
+
+<form id="form">
+<input type="date" name="date" required>
+<input name="product" placeholder="Product" required>
+<input name="quantity" placeholder="Quantity (eg: 100 CFT)">
+<input type="number" name="purchase_price" placeholder="Purchase Price">
+<input type="number" name="selling_price" placeholder="Selling Price">
+<input name="supplier" placeholder="Supplier">
+<input name="transporter" placeholder="Transporter">
+<input type="number" name="transport_cost" placeholder="Transport Cost">
+<input name="customer" placeholder="Customer">
+<input name="delivery_place" placeholder="Delivery Place">
+<button>Add Entry</button>
+</form>
+</div>
+
+<!-- PAGE 2 -->
+<div id="select" class="page">
+<h2>Select Supplier</h2>
+<input
+  type="text"
+  id="supplierSearch"
+  placeholder="Search supplier..."
+  oninput="filterSuppliers()"
+  style="
+    width:100%;
+    padding:14px 16px;
+    border-radius:14px;
+    border:1px solid rgba(0,0,0,.08);
+    margin-bottom:14px;
+    font-size:14px;
+  "
+/>
+
+<div id="list"></div>
+</div>
+
+<!-- LEDGER -->
+<div id="ledger" class="page">
+
+  
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+  <button class="top-nav-btn" onclick="goBack()">
+  <i data-lucide="arrow-left"></i>
+  </button>
+
+    <button class="top-nav-btn" onclick="downloadPDF()">
+  <i data-lucide="file-text"></i>
+   </button>
+  </div>
+  <input
+  type="text"
+  id="searchInput"
+  placeholder="Search by date, item, qty, amount…"
+  oninput="filterLedger()"
+  style="
+    width:100%;
+    padding:14px 16px;
+    border-radius:14px;
+    border:1px solid rgba(0,0,0,.08);
+    margin-bottom:14px;
+    font-size:14px;
+  "
+/>
+
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <h2 id="ledgerTitle" style="margin:0"></h2>
+
+    <div style="display:flex;gap:8px;align-items:center">
+      <!-- Short PDF button: downloads the first-5-columns PDF -->
+      <button id="downloadShortBtn" class="top-nav-btn" title="Download short PDF (first 5 columns)">
+        <i data-lucide="download-cloud"></i>
+      </button>
+
+      <!-- Sort button (red box area) -->
+      <button
+        id="sortBtn"
+        onclick="toggleSort()"
+        class="sort-btn"
+        title="Sort by date"
+      >
+        <i data-lucide="arrow-down-up"></i>
+      </button>
+    </div>
+  </div>
+
+
+  <div id="ledgerRows"></div>
+
+</div>
+
+<!-- PAGE 3 -->
+<div id="all" class="page">
+<h2>All Customers</h2>
+<input
+  type="text"
+  id="customerSearch"
+  placeholder="Search customer..."
+  oninput="filterCustomers()"
+  style="
+    width:100%;
+    padding:14px 16px;
+    border-radius:14px;
+    border:1px solid rgba(0,0,0,.08);
+    margin-bottom:14px;
+    font-size:14px;
+  "
+/>
+
+<div id="summary"></div>
+
+</div>
+
+<nav>
+<button onclick="show('home')"><i data-lucide="home"></i></button>
+<button onclick="loadList()"><i data-lucide="file-text"></i></button>
+<button onclick="loadSummary()"><i data-lucide="users"></i></button>
+</nav>
+
+<script>
+/* 🔒 YOUR ORIGINAL JS — UNTOUCHED */
+</script>
+
+<script>
+lucide.createIcons();
+
+document.querySelectorAll("button, .card").forEach(el=>{
+  el.addEventListener("mousemove", e=>{
+    const r = el.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    el.style.setProperty("--x", `${x}px`);
+    el.style.setProperty("--y", `${y}px`);
+  });
+});
+</script>
+
+<script>
+/* -------------------------
+   Supabase-backed Purchase App
+   Drop this in place of the old Google Apps Script API calls.
+   ------------------------- */
+
+const SUPABASE_URL = "https://wsypqgzpknmvwfdarugx.supabase.co"; // e.g. https://abcd.supabase.co
+const SUPABASE_KEY = "sb_publishable_3DiYrm7aNSbS27ZAYJDTlA_xuuMfAAq";
+
+const REST_BASE = SUPABASE_URL + "/rest/v1";
+const HEADERS = {
+  "apikey": SUPABASE_KEY,
+  "Authorization": `Bearer ${SUPABASE_KEY}`,
+  "Content-Type": "application/json",
+  "Accept": "application/json"
+};
+
+/* ================= GLOBAL ================= */
+let filteredLedgerData = [];
+window.ledgerData = [];
+let editingId = null; // null = new entry, number = edit mode
+
+
+/* ================= HELPERS (unchanged) ================= */
+function show(id, push = true){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+
+  if(id !== "ledger"){
+    resetSort();
+    resetSearch();
+  }
+
+  if(push){
+    history.pushState({ page: id }, "", `#${id}`);
+  }
+
+function show(id, push = true){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+
+  // 🔁 RESET SUPPLIER SEARCH
+  if(id === "select"){
+    const s = document.getElementById("supplierSearch");
+    if(s) s.value = "";
+
+    document.querySelectorAll("#list .card")
+      .forEach(c => c.style.display = "block");
+  }
+
+  // 🔁 RESET CUSTOMER SEARCH
+  if(id === "all"){
+    const c = document.getElementById("customerSearch");
+    if(c) c.value = "";
+
+    document.querySelectorAll("#summary .card")
+      .forEach(c => c.style.display = "block");
+  }
+
+  // 🔁 RESET LEDGER SEARCH
+  if(id === "ledger"){
+    resetSearch();
+  }
+
+  if(push){
+    history.pushState({ page: id }, "", `#${id}`);
+  }
+}
+}
+
+function resetEditMode(){
+  editingId = null;
+  form.reset();
+  form.querySelector("button").innerText = "Add Entry";
+
+  // hide reset button
+  document.getElementById("resetEditBtn").style.display = "none";
+}
+
+
+function fmt(n){ 
+  return Number(n||0).toLocaleString("en-IN"); 
+}
+
+/* ================= FORMAT QUANTITY (unchanged) ================= */
+function formatQuantity(qty){
+  if(!qty) return "";
+  const match = qty.trim().match(/^([\d,.]+)\s*(.*)$/);
+  if(!match) return qty;
+
+  let number = match[1].replace(/,/g,"");
+  let unit = match[2] || "";
+
+  if(!isNaN(number)){
+    number = Number(number).toLocaleString("en-IN");
+  }
+  unit = unit.trim().toUpperCase();
+  return unit ? `${number} ${unit}` : number;
+}
+function cleanText(value){
+  if(!value) return null;
+  return value
+    .trim()              // remove start & end spaces
+    .replace(/\s+/g," "); // replace multiple spaces with single space
+}
+
+function resetEditMode(){
+  editingId = null;
+  form.reset();
+  form.querySelector("button").innerText = "Add Entry";
+  document.getElementById("resetEditBtn").style.display = "none";
+  show("home");
+}
+
+/* ================= SAVE (POST to Supabase purchases table) ================= */
+form.onsubmit = async e => {
+  e.preventDefault();
+
+  const qtyInput = form.querySelector('input[name="quantity"]');
+  qtyInput.value = formatQuantity(qtyInput.value);
+
+  // build payload reading same input names as before
+  const payload = {
+  date: form.querySelector('input[name="date"]').value || null,
+
+  product: cleanText(form.querySelector('input[name="product"]').value),
+  quantity: cleanText(form.querySelector('input[name="quantity"]').value),
+
+  purchase_price: form.querySelector('input[name="purchase_price"]').value
+  ? Number(form.querySelector('input[name="purchase_price"]').value)
+  : null,
+
+selling_price: form.querySelector('input[name="selling_price"]').value
+  ? Number(form.querySelector('input[name="selling_price"]').value)
+  : null,
+
+
+  supplier: cleanText(form.querySelector('input[name="supplier"]').value),
+  transporter: cleanText(form.querySelector('input[name="transporter"]').value),
+
+  transport_cost: form.querySelector('input[name="transport_cost"]').value
+    ? Number(form.querySelector('input[name="transport_cost"]').value)
+    : null,
+
+  customer: cleanText(form.querySelector('input[name="customer"]').value),
+  delivery_place: cleanText(form.querySelector('input[name="delivery_place"]').value)
+};
+
+
+  try {
+    // Insert into purchases table
+    let res;
+
+if(editingId){
+  // UPDATE
+  res = await fetch(`${REST_BASE}/purchases?id=eq.${editingId}`, {
+    method: "PATCH",
+    headers: HEADERS,
+    body: JSON.stringify(payload)
+  });
+} else {
+  // INSERT
+  res = await fetch(`${REST_BASE}/purchases`, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify(payload)
+  });
+}
+
+if (!res.ok) throw new Error("Save failed");
+
+
+    if (!res.ok) throw new Error("Save failed");
+
+    // Optionally ensure supplier/customer exists (insert ignore)
+    const supName = payload.supplier;
+    if(supName){
+      // upsert supplier (simple insert attempt; unique constraint prevents duplicates)
+      fetch(`${REST_BASE}/suppliers`, {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ name: supName })
+      }).catch(()=>{}); // ignore errors if already exists
+    }
+    const custName = payload.customer;
+    if(custName){
+      fetch(`${REST_BASE}/customers`, {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ name: custName })
+      }).catch(()=>{});
+    }
+
+    // UX feedback (keeps original behavior)
+    savePopup.classList.add("show");
+form.reset();
+editingId = null;
+form.querySelector("button").innerText = "Add Entry";
+document.getElementById("resetEditBtn").style.display = "none";
+
+
+/* 🔽 ADD THESE TWO LINES HERE */
+editingId = null;                      // exit edit mode
+form.querySelector("button").innerText = "Add Entry";
+
+setTimeout(()=>savePopup.classList.remove("show"),1600);
+
+  } catch (err) {
+    console.error(err);
+    alert("Error saving data");
+  }
+};
+
+/* ================= SUPPLIERS ================= */
+async function loadList(){
+  show("select");
+  list.innerHTML="Loading...";
+
+  try {
+    // Prefer the suppliers table; if empty, derive from purchases distinct supplier
+    let res = await fetch(`${REST_BASE}/suppliers?select=name`, { headers: HEADERS });
+    if(!res.ok) throw new Error("suppliers fetch failed");
+
+    let suppliers = await res.json();
+    if(!suppliers || suppliers.length === 0){
+      // fallback: get distinct supplier names from purchases
+      const pr = await fetch(`${REST_BASE}/purchases?select=supplier`, { headers: HEADERS });
+      const purchases = await pr.json();
+      const names = Array.from(new Set(purchases.map(p => p.supplier).filter(Boolean)));
+      suppliers = names.map(n => ({ name: n }));
+    }
+
+    list.innerHTML = "";
+    suppliers.forEach(obj=>{
+      const n = obj.name;
+      const c=document.createElement("div");
+      c.className="card";
+      c.textContent=n;
+      c.onclick=()=>{
+  // 🔁 reset supplier search
+  const s = document.getElementById("supplierSearch");
+  if(s) s.value = "";
+
+  document.querySelectorAll("#list .card")
+    .forEach(c => c.style.display = "block");
+
+  localStorage.sel = n;
+  localStorage.ledgerType = "supplier";
+  loadLedger();
+};
+
+      list.appendChild(c);
+    });
+  } catch (err) {
+    console.error(err);
+    list.innerHTML = "Error loading suppliers";
+  }
+}
+
+/* ================= LEDGER ================= */
+async function loadLedger(){
+  show("ledger");
+
+  ledgerTitle.innerText = localStorage.sel || "";
+  ledgerRows.innerHTML = "Loading...";
+
+  try {
+    const name = localStorage.sel || "";
+    const type = localStorage.ledgerType === "supplier" ? "supplier" : "customer";
+
+    const qName = encodeURIComponent(name);
+    const url = `${REST_BASE}/purchases?select=id,date,product,quantity,purchase_price,selling_price,supplier,transporter,transport_cost,customer,delivery_place&${type}=eq.${qName}`;
+
+    const res = await fetch(url, { headers: HEADERS });
+    if(!res.ok) throw new Error("Ledger fetch failed");
+
+    const data = await res.json();
+
+    // ✅ Build clean ledger data (KEEP RAW DATE)
+    window.ledgerData = (data || []).map(r => ({
+      id: r.id,
+      dateRaw: r.date,
+      date: r.date
+        ? new Date(r.date).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+          })
+        : "",
+      product: r.product || "",
+      quantity: r.quantity || "",
+      purchase_price: r.purchase_price || 0,
+      selling_price: r.selling_price || 0,
+      supplier: r.supplier || "",
+      transporter: r.transporter || "",
+      transport_cost: r.transport_cost || 0,
+      customer: r.customer || "",
+      delivery_place: r.delivery_place || ""
+    }));
+
+    // ✅ Initialize filtered data
+    filteredLedgerData = [...window.ledgerData];
+
+    // ✅ Sort + render ONLY ONCE
+    applySort();
+
+  } catch (err) {
+    console.error(err);
+    ledgerRows.innerHTML = "Error loading ledger";
+  }
+}
+
+
+function editEntry(id){
+  const row = window.ledgerData.find(r => r.id === id);
+  if(!row) return;
+
+  editingId = id; // 🔒 enter edit mode
+
+  // Fill form fields
+  form.querySelector('input[name="date"]').value =
+    row.date ? new Date(row.date).toISOString().slice(0,10) : "";
+
+  form.querySelector('input[name="product"]').value = row.product;
+  form.querySelector('input[name="quantity"]').value = row.quantity;
+  form.querySelector('input[name="purchase_price"]').value = row.purchase_price;
+form.querySelector('input[name="selling_price"]').value = row.selling_price;
+  form.querySelector('input[name="supplier"]').value = row.supplier;
+  form.querySelector('input[name="transporter"]').value = row.transporter;
+  form.querySelector('input[name="transport_cost"]').value = row.transport_cost;
+  form.querySelector('input[name="customer"]').value = row.customer;
+  form.querySelector('input[name="delivery_place"]').value = row.delivery_place;
+
+  // UI change
+  show("home");
+  form.querySelector("button").innerText = "Update Entry";
+  document.getElementById("resetEditBtn").style.display = "flex";
+
+}
+
+/* ================= SEARCH ================= */
+function filterLedger(){
+  const q = document.getElementById("searchInput").value.toLowerCase();
+
+  filteredLedgerData = window.ledgerData.filter(r =>
+    `${r.product} ${r.customer} ${r.supplier} ${r.quantity} ${r.date}`
+      .toLowerCase()
+      .includes(q)
+  );
+
+  renderLedger(filteredLedgerData);
+}
+
+
+/* ================= BUILD SUPPLIES FROM FILTERED ROWS (NEW) ================= */
+function buildSuppliesFromRows(rows){
+  const map = {};
+
+  rows.forEach(r=>{
+    if(!r.product || !r.quantity) return;
+
+    const num = parseInt(r.quantity.replace(/,/g,""));
+    if(isNaN(num)) return;
+
+    map[r.product] = (map[r.product] || 0) + num;
+  });
+
+  return Object.entries(map)
+    .map(([product, qty]) => `${product} : ${qty.toLocaleString("en-IN")} PCS`)
+    .join("\n");
+}
+
+function getLedgerPrice(row){
+  return localStorage.ledgerType === "customer"
+    ? Number(row.selling_price || 0)
+    : Number(row.purchase_price || 0);
+}
+
+/* ================= PDF (FORMAT UNCHANGED) ================= */
+function downloadPDF(){
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p","mm","a4");
+  isSupplierView()
+
+
+  const rows = filteredLedgerData.length
+    ? filteredLedgerData
+    : window.ledgerData;
+
+  if(!rows || !rows.length){
+    alert("No data");
+    return;
+  }
+
+  const name = localStorage.sel;
+  const type = localStorage.ledgerType === "supplier" ? "Supplier" : "Customer";
+  const today = new Date().toLocaleDateString("en-GB");
+
+  let totalPrice = 0;
+rows.forEach(r => {
+  totalPrice += getLedgerPrice(r);
+});
+
+  const suppliesText = buildSuppliesFromRows(rows) || "-";
+  const supplyLines = suppliesText.split("\n").length;
+
+  let y = 20;
+
+  pdf.setFont("helvetica","bold");
+  pdf.setFontSize(16);
+  pdf.text("SA ENTERPRISE", 15, y);
+  y += 8;
+
+  pdf.setFontSize(12);
+  pdf.setFont("helvetica","normal");
+  pdf.text("Ledger Report", 15, y);
+  y += 14;
+
+  pdf.setFontSize(10);
+  pdf.text(`${type}: ${name}`, 15, y);
+  pdf.text(`Date: ${today}`, 15, y + 6);
+
+  pdf.text(
+    `Total Supplies:\n${suppliesText}`,
+    120,
+    y,
+    { maxWidth: 70 }
+  );
+
+  const priceY = y + supplyLines * 5 + 8;
+  pdf.text(`Total Price RS ${fmt(totalPrice)}`, 120, priceY);
+
+  y = Math.max(y + 14, priceY + 10);
+
+  pdf.setFont("helvetica","bold");
+  pdf.text("Supplies", 15, y);
+  y += 8;
+
+  const col = {
+    date:22, product:48, qty:72, price:90,
+    supplier:108, transporter:128, tcost:148,
+    customer:168, place:186
+  };
+
+  function drawHeader(){
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(9);
+    pdf.text("Date",col.date,y,{align:"center"});
+    pdf.text("Product",col.product,y,{align:"center"});
+    pdf.text("Qty",col.qty,y,{align:"center"});
+    pdf.text("Price",col.price,y,{align:"center"});
+    pdf.text("Supplier",col.supplier,y,{align:"center"});
+    pdf.text("Transporter",col.transporter,y,{align:"center"});
+    pdf.text("T.Cost",col.tcost,y,{align:"center"});
+    pdf.text("Customer",col.customer,y,{align:"center"});
+    pdf.text("Place",col.place,y,{align:"center"});
+    pdf.line(18,y+2,192,y+2);
+    y += 7;
+    pdf.setFont("helvetica","normal");
+    pdf.setFontSize(8);
+  }
+
+  drawHeader();
+
+  rows.forEach(r=>{
+    if(y > 270){
+      pdf.addPage();
+      y = 20;
+      drawHeader();
+    }
+
+    pdf.text(r.date, col.date, y, {align:"center"});
+    pdf.text(r.product, col.product, y, {align:"center", maxWidth:26});
+    pdf.text(r.quantity || "-", col.qty, y, {align:"center"});
+    pdf.text(
+  "RS " + fmt(getLedgerPrice(r)),
+  col.price,
+  y,
+  { align:"center" }
+);
+    pdf.text(r.supplier, col.supplier, y, {align:"center", maxWidth:22});
+    pdf.text(r.transporter || "-", col.transporter, y, {align:"center", maxWidth:24});
+    pdf.text(fmt(r.transport_cost), col.tcost, y, {align:"center"});
+    pdf.text(r.customer, col.customer, y, {align:"center", maxWidth:22});
+    pdf.text(r.delivery_place || "-", col.place, y, {align:"center", maxWidth:20});
+    y += 7;
+  });
+
+  pdf.save(`Ledger_${name}.pdf`);
+}
+
+
+
+function downloadPDFShort(){
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p","mm","a4");
+
+  const isCustomer = localStorage.ledgerType === "customer";
+
+  const rows = filteredLedgerData.length
+    ? filteredLedgerData
+    : window.ledgerData;
+
+  if(!rows.length){
+    alert("No data");
+    return;
+  }
+
+  const name = localStorage.sel || "Ledger";
+  const today = new Date().toLocaleDateString("en-GB");
+
+  /* ================= TOTAL PRICE ================= */
+  let totalPrice = 0;
+  rows.forEach(r => {
+    totalPrice += isCustomer
+      ? Number(r.selling_price || 0)
+      : Number(r.purchase_price || 0);
+  });
+
+  /* ================= TOTAL SUPPLIES ================= */
+  const suppliesText = buildSuppliesFromRows(rows) || "-";
+  const supplyLines = suppliesText.split("\n").length;
+
+  /* ================= HEADER ================= */
+  let y = 20;
+
+  pdf.setFont("helvetica","bold");
+  pdf.setFontSize(16);
+  pdf.text("SA ENTERPRISE", 15, y);
+
+  y += 8;
+  pdf.setFontSize(12);
+  pdf.setFont("helvetica","normal");
+  pdf.text("Ledger Report", 15, y);
+
+  y += 14;
+  pdf.setFontSize(10);
+  pdf.text(
+    `${isCustomer ? "Customer" : "Supplier"}: ${name}`,
+    15,
+    y
+  );
+  pdf.text(`Date: ${today}`, 15, y + 6);
+
+  pdf.text(
+    `Total Supplies:\n${suppliesText}`,
+    120,
+    y,
+    { maxWidth: 70 }
+  );
+
+  const priceY = y + supplyLines * 5 + 8;
+  pdf.text(`Total Price RS ${fmt(totalPrice)}`, 120, priceY);
+
+  y = Math.max(y + 14, priceY + 10);
+
+  /* ================= TABLE HEADER ================= */
+  function drawHeader(){
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(9);
+
+    pdf.text("Date", 25, y, { align:"center" });
+    pdf.text("Product", 70, y, { align:"center" });
+    pdf.text("Qty", 110, y, { align:"center" });
+    pdf.text("Price", 145, y, { align:"center" });
+
+    /* 🔑 ALWAYS draw Supplier column */
+    pdf.text("Supplier", 175, y, { align:"center" });
+
+    pdf.line(15, y + 3, 195, y + 3);
+    y += 7;
+
+    pdf.setFont("helvetica","normal");
+    pdf.setFontSize(8);
+  }
+
+  drawHeader();
+
+  /* ================= ROWS ================= */
+  rows.forEach(r=>{
+    if(y > 270){
+      pdf.addPage();
+      y = 20;
+      drawHeader();
+    }
+
+    const price = isCustomer
+      ? r.selling_price
+      : r.purchase_price;
+
+    pdf.text(r.date || "-", 25, y, { align:"center" });
+    pdf.text(r.product || "-", 70, y, { align:"center", maxWidth:60 });
+    pdf.text(r.quantity || "-", 110, y, { align:"center" });
+    pdf.text("RS " + fmt(price), 145, y, { align:"center" });
+
+    /* 🔑 Keep space, hide text for customer */
+    pdf.text(
+      isCustomer ? "-" : (r.supplier || "-"),
+      175,
+      y,
+      { align:"center", maxWidth:30 }
+    );
+
+    y += 7;
+  });
+
+  pdf.save(`Ledger_Short_${name}.pdf`);
+}
+
+
+
+
+
+
+
+/* ================= SUMMARY ================= */
+async function loadSummary(){
+  show("all");
+  summary.innerHTML="Loading...";
+  try {
+    // Fetch purchases minimal data and compute totals client side grouped by customer
+    const res = await fetch(`${REST_BASE}/purchases?select=customer,selling_price`, { headers: HEADERS });
+    if(!res.ok) throw new Error("summary fetch failed");
+    const arr = await res.json();
+
+    // group by customer name and sum price
+    const map = {};
+    arr.forEach(p=>{
+      const name = (p.customer || "Unknown").trim().toLowerCase();
+      const price = Number(p.selling_price || 0);
+      map[name] = (map[name] || 0) + price;
+    });
+
+    const list = Object.entries(map).map(([name,total]) => {
+  const displayName = name
+    .split(" ")
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+  return { name, displayName, total };
+});
+
+summary.innerHTML = "";
+list.forEach(c=>{
+  summary.innerHTML+=`
+    <div class="card" onclick="
+  const cs=document.getElementById('customerSearch');
+  if(cs) cs.value='';
+  document.querySelectorAll('#summary .card')
+    .forEach(c=>c.style.display='block');
+
+  localStorage.sel='${c.displayName}';
+  localStorage.ledgerType='customer';
+  loadLedger();
+">
+
+      ${c.displayName}
+      <b style="float:right">RS ${fmt(c.total)}</b>
+    </div>`;
+});
+
+
+  } catch(err) {
+    console.error(err);
+    summary.innerHTML = "Error loading summary";
+  }
+}
+
+
+
+function goBack(){
+  if(localStorage.ledgerType==="supplier") show("select");
+  else if(localStorage.ledgerType==="customer") show("all");
+  else show("home");
+}
+
+/* keep lucide initialization that your page used */
+lucide.createIcons();
+
+let sortOrder = "desc"; // default: newest first
+
+function toggleSort(){
+  sortOrder = sortOrder === "desc" ? "asc" : "desc";
+
+  const btn = document.getElementById("sortBtn");
+  btn.classList.toggle("active", sortOrder === "asc");
+
+  applySort();
+}
+
+
+function applySort(){
+  const rows = filteredLedgerData.length
+    ? filteredLedgerData
+    : window.ledgerData;
+
+  rows.sort((a, b) => {
+    const da = new Date(a.dateRaw);
+    const db = new Date(b.dateRaw);
+    return sortOrder === "asc" ? da - db : db - da;
+  });
+
+  renderLedger(rows);
+}
+
+function isSupplierView(){
+  return localStorage.ledgerType === "supplier";
+}
+
+
+function resetSort(){
+  sortOrder = "desc"; // default
+  const btn = document.getElementById("sortBtn");
+  if(btn){
+    btn.classList.remove("active");
+  }
+}
+// wire short pdf button (safe if element exists)
+const shortBtn = document.getElementById("downloadShortBtn");
+if(shortBtn) shortBtn.addEventListener("click", downloadPDFShort);
+
+function resetSearch(){
+  const input = document.getElementById("searchInput");
+  if(input){
+    input.value = "";
+  }
+  filteredLedgerData = [];
+  const cards = document.querySelectorAll("#ledgerRows .card");
+  cards.forEach(c => c.style.display = "block");
+}
+
+
+<!-- Autocomplete helpers: paste after your existing JS (after REST_BASE & HEADERS) -->
+/* Lightweight autocomplete for "name" fields using your existing Supabase tables.
+   - Fields targeted: product, supplier, transporter, customer, delivery_place
+   - Excludes numeric-only entries (eg: "123", "  56 ")
+   - Sorts A→Z, dedupes, keyboard friendly
+*/
+
+const AUTOCOMPLETE_FIELDS = [
+  { name: "product", source: "purchases", column: "product" },
+  { name: "supplier", source: "suppliers", column: "name" },
+  { name: "transporter", source: "purchases", column: "transporter" },
+  { name: "customer", source: "customers", column: "name" },
+  { name: "delivery_place", source: "purchases", column: "delivery_place" }
+];
+
+// utility: is numeric-only string?
+function isNumericOnly(s){
+  if(!s) return false;
+  return /^\s*[\d,.\s]+\s*$/.test(s);
+}
+
+// fetch distinct values for a given source+column
+async function fetchDistinct(source, column){
+  try {
+    // prefer dedicated tables (suppliers/customers) if source matches
+    if(source === "suppliers" || source === "customers"){
+      const url = `${REST_BASE}/${source}?select=${encodeURIComponent(column)}`;
+      const res = await fetch(url, { headers: HEADERS });
+      if(!res.ok) throw new Error("fetch failed");
+      const arr = await res.json();
+      return arr.map(r => r[column]).filter(Boolean);
+    } else {
+      // purchases fallback — use select distinct via RPC-like query (returns duplicates often)
+      const url = `${REST_BASE}/purchases?select=${encodeURIComponent(column)}`;
+      const res = await fetch(url, { headers: HEADERS });
+      if(!res.ok) throw new Error("fetch failed");
+      const arr = await res.json();
+      return arr.map(r => r[column]).filter(Boolean);
+    }
+  } catch (e){
+    console.warn("Autocomplete fetch error", e);
+    return [];
+  }
+}
+
+// prepare suggestion list: dedupe, filter numeric-only, trim, alphabetical
+function prepareSuggestions(arr){
+  const set = new Set();
+  arr.forEach(v=>{
+    if(!v) return;
+    const txt = String(v).trim();
+    if(!txt) return;
+    if(isNumericOnly(txt)) return; // skip numeric-only
+    set.add(txt);
+  });
+  return Array.from(set).sort((a,b)=> a.localeCompare(b, undefined, {sensitivity:"base"}));
+}
+
+/* --- UI: attach a dropdown to an input --- */
+function attachAutocomplete(inputEl, suggestions){
+  // create container
+  inputEl.setAttribute("autocomplete","off");
+  const wrap = document.createElement("div");
+  wrap.style.position = "relative";
+  wrap.className = "autocomplete-wrap";
+  inputEl.parentNode.insertBefore(wrap, inputEl);
+  wrap.appendChild(inputEl);
+
+  const list = document.createElement("div");
+  list.className = "autocomplete-list";
+  list.style.position = "absolute";
+  list.style.left = "0";
+  list.style.right = "0";
+  list.style.top = `calc(100% + 6px)`;
+  list.style.zIndex = 9999;
+  list.style.background = "white";
+  list.style.border = "1px solid rgba(15,23,42,.08)";
+  list.style.borderRadius = "10px";
+  list.style.boxShadow = "0 8px 24px rgba(2,6,23,.08)";
+  list.style.maxHeight = "240px";
+  list.style.overflow = "auto";
+  list.style.display = "none";
+  list.style.fontSize = "14px";
+  list.style.padding = "6px 6px";
+  wrap.appendChild(list);
+
+  let current = -1;
+  let filtered = suggestions;
+
+  function render(items){
+    list.innerHTML = "";
+    if(!items || items.length === 0){
+      list.style.display = "none";
+      return;
+    }
+    items.forEach((it, idx)=>{
+      const row = document.createElement("div");
+      row.className = "autocomplete-item";
+      row.textContent = it;
+      row.style.padding = "8px 10px";
+      row.style.borderRadius = "8px";
+      row.style.cursor = "pointer";
+      row.style.whiteSpace = "nowrap";
+      row.style.overflow = "hidden";
+      row.style.textOverflow = "ellipsis";
+
+      row.addEventListener("mouseenter", ()=> {
+        // highlight
+        clearHighlight();
+        current = idx;
+        row.style.background = "linear-gradient(90deg,#eef6ff,#f8fbff)";
+      });
+      row.addEventListener("mouseleave", ()=> {
+        row.style.background = "transparent";
+        current = -1;
+      });
+      row.addEventListener("click", ()=> {
+        inputEl.value = it;
+        hide();
+        inputEl.focus();
+      });
+      list.appendChild(row);
+    });
+    list.style.display = "block";
+  }
+
+  function clearHighlight(){
+    [...list.children].forEach(ch => ch.style.background = "transparent");
+  }
+
+  function highlight(index){
+    clearHighlight();
+    current = index;
+    const ch = list.children[index];
+    if(ch){
+      ch.style.background = "linear-gradient(90deg,#eef6ff,#f8fbff)";
+      // ensure visible
+      const top = ch.offsetTop;
+      const chH = ch.offsetHeight;
+      const visibleTop = list.scrollTop;
+      const visibleBottom = visibleTop + list.clientHeight;
+      if(top < visibleTop) list.scrollTop = top;
+      if(top + chH > visibleBottom) list.scrollTop = top + chH - list.clientHeight;
+    }
+  }
+
+  function hide(){
+    list.style.display = "none";
+    current = -1;
+  }
+
+  // input handlers
+  inputEl.addEventListener("input", (e)=>{
+    const q = inputEl.value.trim().toLowerCase();
+    if(!q){
+      filtered = suggestions.slice();
+    } else {
+      filtered = suggestions.filter(s => s.toLowerCase().includes(q));
+    }
+    render(filtered);
+  });
+
+  inputEl.addEventListener("keydown", (e)=>{
+    if(list.style.display === "none") return;
+    if(e.key === "ArrowDown"){
+      e.preventDefault();
+      if(current < filtered.length - 1) highlight(current + 1);
+      else highlight(0);
+    } else if(e.key === "ArrowUp"){
+      e.preventDefault();
+      if(current > 0) highlight(current - 1);
+      else highlight(filtered.length - 1);
+    } else if(e.key === "Enter"){
+      if(current >= 0 && current < filtered.length){
+        e.preventDefault();
+        inputEl.value = filtered[current];
+        hide();
+      }
+    } else if(e.key === "Escape"){
+      hide();
+      inputEl.blur();
+    }
+  });
+
+  // close on outside click
+  document.addEventListener("click", (ev) => {
+    if(!wrap.contains(ev.target)) hide();
+  });
+
+  // initial render: don't show until user types or focuses
+  inputEl.addEventListener("focus", ()=>{
+    const q = inputEl.value.trim().toLowerCase();
+    filtered = q ? suggestions.filter(s => s.toLowerCase().includes(q)) : suggestions.slice(0, 50);
+    render(filtered);
+  });
+}
+
+/* --- wire everything up --- */
+async function initAutocompletes(){
+  // fetch suggestions per configured field
+  for(const f of AUTOCOMPLETE_FIELDS){
+    const input = document.querySelector(`input[name="${f.name}"]`);
+    if(!input) continue;
+
+    // gather from dedicated table + purchases column (helps for product/transporter/delivery_place)
+    const vals1 = await fetchDistinct(f.source, f.column);
+    // if source is purchases and there is a dedicated table (eg: suppliers/customers), also try those
+    let vals2 = [];
+    if(f.name === "supplier"){
+      vals2 = await fetchDistinct("suppliers", "name");
+    } else if(f.name === "customer"){
+      vals2 = await fetchDistinct("customers", "name");
+    }
+
+    const all = prepareSuggestions([...(vals1||[]), ...(vals2||[])]);
+    attachAutocomplete(input, all);
+  }
+}
+
+// run after page load
+document.addEventListener("DOMContentLoaded", () => {
+  // small delay to ensure REST_BASE & HEADERS exist
+  setTimeout(initAutocompletes, 80);
+});
+
+window.addEventListener("popstate", (e) => {
+  const page = e.state?.page || "home";
+  show(page, false);
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const pageFromHash = location.hash.replace("#", "") || "home";
+  show(pageFromHash, false);
+});
+
+function renderLedger(rows){
+  ledgerRows.innerHTML = "";
+
+  rows.forEach(r=>{
+    ledgerRows.innerHTML += `
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <b>${r.product}</b><br>
+            ${r.customer || "-"} · ${r.date} · ${r.quantity || "-"} · 
+            ₹ ${fmt(isSupplierView() ? r.purchase_price : r.selling_price)}
+          </div>
+
+          <button class="top-nav-btn" onclick="editEntry(${r.id})">
+            <i data-lucide="pencil"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  lucide.createIcons();
+}
+
+function filterSuppliers(){
+  const q = document.getElementById("supplierSearch").value.toLowerCase();
+  const cards = document.querySelectorAll("#list .card");
+
+  cards.forEach(card=>{
+    const text = card.textContent.toLowerCase();
+    card.style.display = text.includes(q) ? "block" : "none";
+  });
+}
+function filterCustomers(){
+  const q = document.getElementById("customerSearch").value.toLowerCase();
+  const cards = document.querySelectorAll("#summary .card");
+
+  cards.forEach(card=>{
+    const text = card.textContent.toLowerCase();
+    card.style.display = text.includes(q) ? "block" : "none";
+  });
+}
+
+</script>
+
+
+
+</body>
+</html>
